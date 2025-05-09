@@ -8,9 +8,12 @@ import Home from "@/pages/Home";
 import ProductDetail from "@/pages/ProductDetail";
 import CategoryPage from "@/pages/CategoryPage";
 import Admin from "@/pages/Admin";
+import AuthPage from "@/pages/auth-page";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Chatbot from "@/components/Chatbot";
+import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute } from "@/lib/protected-route";
 
 function Router() {
   return (
@@ -20,7 +23,8 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/product/:id" component={ProductDetail} />
         <Route path="/category/:slug" component={CategoryPage} />
-        <Route path="/admin" component={Admin} />
+        <ProtectedRoute path="/admin" component={Admin} />
+        <Route path="/auth" component={AuthPage} />
         <Route component={NotFound} />
       </Switch>
       <Footer />
@@ -32,10 +36,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

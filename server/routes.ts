@@ -8,11 +8,15 @@ import {
   productConditions,
   marketplaces,
 } from "@shared/schema";
+import { setupAuth } from "./auth";
 
 // Validation error handling
 import { fromZodError } from "zod-validation-error";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication
+  setupAuth(app);
+  
   // Create HTTP server
   const httpServer = createServer(app);
 
