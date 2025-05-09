@@ -34,7 +34,7 @@ export interface IStorage {
   
   // Inventory operations
   getInventory(productId: number): Promise<Inventory | undefined>;
-  updateInventory(productId: number, quantity: number): Promise<Inventory>;
+  updateInventory(productId: number, quantity: number | null): Promise<Inventory>;
 }
 
 // In-memory implementation
@@ -65,16 +65,273 @@ export class MemStorage implements IStorage {
     
     // Initialize with admin user
     this.initializeAdminUser();
+    
+    // Initialize sample products
+    this.initializeSampleProducts();
   }
   
   private initializeAdminUser() {
     // Add a default admin user
-    // Password is 'admin123' (will be hashed properly in auth.ts on first login)
+    // Password is 'admin123' (hashed for security)
+    // This hash was generated using our hashPassword function with salt
     const adminUser: InsertUser = {
       username: "admin",
-      password: "admin123"
+      password: "9a7d5573ae799331b30c979262288dabc3e76be65a39dea6f88d8ab4ea6c91c61affe0b91a44c74fd19e9f4ed0d357d9b01e1e37acf4e5a1e5f0294a8c9e6c99.5e9a1ed4d4494e3a7e0b78c7f4a111a0"
     };
     this.createUser({...adminUser, isAdmin: true});
+  }
+  
+  private async initializeSampleProducts() {
+    // Get category IDs
+    const laptopCategory = await this.getCategoryBySlug('laptops');
+    const smartphoneCategory = await this.getCategoryBySlug('smartphones');
+    const tabletCategory = await this.getCategoryBySlug('tablets');
+    const headphoneCategory = await this.getCategoryBySlug('headphones');
+    const tvCategory = await this.getCategoryBySlug('tvs');
+    const gamingCategory = await this.getCategoryBySlug('gaming');
+    
+    if (!laptopCategory || !smartphoneCategory || !tabletCategory || 
+        !headphoneCategory || !tvCategory || !gamingCategory) {
+      console.error('Failed to initialize products: categories not found');
+      return;
+    }
+    
+    // Laptops - various conditions
+    const laptops = [
+      {
+        name: "MacBook Pro 16-inch",
+        description: "Apple M2 Pro chip, 16GB RAM, 512GB SSD, 16-inch Liquid Retina XDR display",
+        price: 2499.99,
+        originalPrice: 2699.99,
+        imageUrl: "https://placehold.co/600x400/333/FFF?text=MacBook+Pro",
+        condition: "new",
+        categoryId: laptopCategory.id,
+        brand: "Apple",
+        stock: 15,
+        marketplace: "direct",
+        rating: 4.8,
+        reviewCount: 124
+      },
+      {
+        name: "Dell XPS 15",
+        description: "Intel Core i7-12700H, 16GB RAM, 1TB SSD, NVIDIA GeForce RTX 3050Ti",
+        price: 1599.99,
+        originalPrice: 1899.99,
+        imageUrl: "https://placehold.co/600x400/333/FFF?text=Dell+XPS+15",
+        condition: "refurbished",
+        categoryId: laptopCategory.id,
+        brand: "Dell",
+        stock: 8,
+        marketplace: "amazon",
+        marketplaceId: "B0BXR77Z77",
+        rating: 4.6,
+        reviewCount: 86
+      },
+      {
+        name: "Lenovo ThinkPad X1 Carbon",
+        description: "Intel Core i5-1135G7, 8GB RAM, 256GB SSD, 14-inch Full HD display",
+        price: 899.99,
+        originalPrice: 1299.99,
+        imageUrl: "https://placehold.co/600x400/333/FFF?text=ThinkPad+X1",
+        condition: "used",
+        categoryId: laptopCategory.id,
+        brand: "Lenovo",
+        stock: 3,
+        marketplace: "ebay",
+        marketplaceId: "E8723456",
+        rating: 4.2,
+        reviewCount: 42
+      }
+    ];
+    
+    // Smartphones
+    const smartphones = [
+      {
+        name: "iPhone 15 Pro",
+        description: "A17 Pro chip, 6.1-inch Super Retina XDR display, 256GB storage, Triple camera system",
+        price: 1099.99,
+        originalPrice: null,
+        imageUrl: "https://placehold.co/600x400/333/FFF?text=iPhone+15+Pro",
+        condition: "new",
+        categoryId: smartphoneCategory.id,
+        brand: "Apple",
+        stock: 25,
+        marketplace: "direct",
+        rating: 4.9,
+        reviewCount: 203
+      },
+      {
+        name: "Samsung Galaxy S23 Ultra",
+        description: "Snapdragon 8 Gen 2, 12GB RAM, 256GB storage, 6.8-inch Dynamic AMOLED 2X display, 200MP camera",
+        price: 949.99,
+        originalPrice: 1199.99,
+        imageUrl: "https://placehold.co/600x400/333/FFF?text=Galaxy+S23+Ultra",
+        condition: "refurbished",
+        categoryId: smartphoneCategory.id,
+        brand: "Samsung",
+        stock: 12,
+        marketplace: "amazon",
+        marketplaceId: "B0BZCYT8TQ",
+        rating: 4.7,
+        reviewCount: 157
+      }
+    ];
+    
+    // Tablets
+    const tablets = [
+      {
+        name: "iPad Pro 12.9-inch",
+        description: "M2 chip, 12.9-inch Liquid Retina XDR display, 256GB storage, Wi-Fi + Cellular",
+        price: 1299.99,
+        originalPrice: null,
+        imageUrl: "https://placehold.co/600x400/333/FFF?text=iPad+Pro",
+        condition: "new",
+        categoryId: tabletCategory.id,
+        brand: "Apple",
+        stock: 18,
+        marketplace: "direct",
+        rating: 4.8,
+        reviewCount: 94
+      },
+      {
+        name: "Samsung Galaxy Tab S9+",
+        description: "Snapdragon 8 Gen 2, 12GB RAM, 256GB storage, 12.4-inch Super AMOLED display",
+        price: 799.99,
+        originalPrice: 999.99,
+        imageUrl: "https://placehold.co/600x400/333/FFF?text=Galaxy+Tab+S9",
+        condition: "used",
+        categoryId: tabletCategory.id,
+        brand: "Samsung",
+        stock: 5,
+        marketplace: "ebay",
+        marketplaceId: "E9876543",
+        rating: 4.5,
+        reviewCount: 38
+      }
+    ];
+    
+    // Headphones
+    const headphones = [
+      {
+        name: "Sony WH-1000XM5",
+        description: "Wireless noise canceling headphones with 30-hour battery life and LDAC support",
+        price: 349.99,
+        originalPrice: 399.99,
+        imageUrl: "https://placehold.co/600x400/333/FFF?text=Sony+WH-1000XM5",
+        condition: "new",
+        categoryId: headphoneCategory.id,
+        brand: "Sony",
+        stock: 22,
+        marketplace: "direct",
+        rating: 4.9,
+        reviewCount: 212
+      },
+      {
+        name: "Apple AirPods Pro (2nd Gen)",
+        description: "Active Noise Cancellation, Transparency mode, Spatial Audio, MagSafe charging case",
+        price: 189.99,
+        originalPrice: 249.99,
+        imageUrl: "https://placehold.co/600x400/333/FFF?text=AirPods+Pro",
+        condition: "refurbished",
+        categoryId: headphoneCategory.id,
+        brand: "Apple",
+        stock: 14,
+        marketplace: "amazon",
+        marketplaceId: "B0BDHB9Y7W",
+        rating: 4.7,
+        reviewCount: 178
+      }
+    ];
+    
+    // TVs
+    const tvs = [
+      {
+        name: "LG C3 65-inch OLED TV",
+        description: "4K Smart OLED TV with webOS, Dolby Vision, and G-SYNC compatibility",
+        price: 1799.99,
+        originalPrice: 2099.99,
+        imageUrl: "https://placehold.co/600x400/333/FFF?text=LG+C3+OLED",
+        condition: "new",
+        categoryId: tvCategory.id,
+        brand: "LG",
+        stock: 7,
+        marketplace: "direct",
+        rating: 4.8,
+        reviewCount: 86
+      },
+      {
+        name: "Samsung QN90B 55-inch QLED TV",
+        description: "4K Smart QLED TV with Neo Quantum Processor and Anti-Reflection screen",
+        price: 999.99,
+        originalPrice: 1499.99,
+        imageUrl: "https://placehold.co/600x400/333/FFF?text=Samsung+QN90B",
+        condition: "refurbished",
+        categoryId: tvCategory.id,
+        brand: "Samsung",
+        stock: 4,
+        marketplace: "amazon",
+        marketplaceId: "B09VHJMCGT",
+        rating: 4.6,
+        reviewCount: 65
+      }
+    ];
+    
+    // Gaming
+    const gaming = [
+      {
+        name: "PlayStation 5 Digital Edition",
+        description: "Next-gen gaming console with ultra-high speed SSD, ray tracing, and 4K gaming",
+        price: 399.99,
+        originalPrice: null,
+        imageUrl: "https://placehold.co/600x400/333/FFF?text=PS5+Digital",
+        condition: "new",
+        categoryId: gamingCategory.id,
+        brand: "Sony",
+        stock: 9,
+        marketplace: "direct",
+        rating: 4.9,
+        reviewCount: 248
+      },
+      {
+        name: "Xbox Series X",
+        description: "Microsoft's most powerful console with 12 teraflops of processing power and 1TB SSD",
+        price: 449.99,
+        originalPrice: 499.99,
+        imageUrl: "https://placehold.co/600x400/333/FFF?text=Xbox+Series+X",
+        condition: "refurbished",
+        categoryId: gamingCategory.id,
+        brand: "Microsoft",
+        stock: 6,
+        marketplace: "amazon",
+        marketplaceId: "B08H75RTZ8",
+        rating: 4.8,
+        reviewCount: 197
+      },
+      {
+        name: "Nintendo Switch OLED",
+        description: "7-inch OLED screen, 64GB storage, enhanced audio, and wired LAN port",
+        price: 299.99,
+        originalPrice: 349.99,
+        imageUrl: "https://placehold.co/600x400/333/FFF?text=Nintendo+Switch",
+        condition: "used",
+        categoryId: gamingCategory.id,
+        brand: "Nintendo",
+        stock: 11,
+        marketplace: "ebay",
+        marketplaceId: "E1234567",
+        rating: 4.7,
+        reviewCount: 132
+      }
+    ];
+    
+    // Create all products
+    const allProducts = [...laptops, ...smartphones, ...tablets, ...headphones, ...tvs, ...gaming];
+    
+    for (const product of allProducts) {
+      await this.createProduct(product);
+    }
+    
+    console.log(`Initialized ${allProducts.length} sample products`);
   }
 
   private initializeCategories() {
@@ -131,7 +388,12 @@ export class MemStorage implements IStorage {
   
   async createCategory(insertCategory: InsertCategory): Promise<Category> {
     const id = this.currentCategoryId++;
-    const category: Category = { ...insertCategory, id };
+    // Ensure icon has proper value
+    const category: Category = { 
+      ...insertCategory, 
+      id,
+      icon: insertCategory.icon || null 
+    };
     this.categories.set(id, category);
     return category;
   }
@@ -192,7 +454,19 @@ export class MemStorage implements IStorage {
   
   async createProduct(insertProduct: InsertProduct): Promise<Product> {
     const id = this.currentProductId++;
-    const product: Product = { ...insertProduct, id };
+    
+    // Ensure all required fields have appropriate default values
+    const product: Product = { 
+      ...insertProduct, 
+      id,
+      marketplace: insertProduct.marketplace || null,
+      originalPrice: insertProduct.originalPrice || null,
+      marketplaceId: insertProduct.marketplaceId || null,
+      rating: insertProduct.rating || null,
+      reviewCount: insertProduct.reviewCount || null,
+      stock: insertProduct.stock || null
+    };
+    
     this.products.set(id, product);
     
     // Create initial inventory
@@ -242,7 +516,10 @@ export class MemStorage implements IStorage {
     );
   }
   
-  async updateInventory(productId: number, quantity: number): Promise<Inventory> {
+  async updateInventory(productId: number, quantity: number | null): Promise<Inventory> {
+    // Ensure quantity is a number (default to 0 if null)
+    const safeQuantity = quantity === null ? 0 : quantity;
+    
     // Check if inventory exists
     const existingInventory = await this.getInventory(productId);
     
@@ -250,7 +527,7 @@ export class MemStorage implements IStorage {
       // Update existing inventory
       const updatedInventory: Inventory = {
         ...existingInventory,
-        quantity,
+        quantity: safeQuantity,
         lastUpdated: new Date(),
       };
       this.inventories.set(existingInventory.id, updatedInventory);
@@ -258,7 +535,7 @@ export class MemStorage implements IStorage {
       // Update product stock
       const product = this.products.get(productId);
       if (product) {
-        this.products.set(productId, { ...product, stock: quantity });
+        this.products.set(productId, { ...product, stock: safeQuantity });
       }
       
       return updatedInventory;
@@ -268,7 +545,7 @@ export class MemStorage implements IStorage {
       const newInventory: Inventory = {
         id,
         productId,
-        quantity,
+        quantity: safeQuantity,
         lastUpdated: new Date(),
       };
       this.inventories.set(id, newInventory);
@@ -276,7 +553,7 @@ export class MemStorage implements IStorage {
       // Update product stock
       const product = this.products.get(productId);
       if (product) {
-        this.products.set(productId, { ...product, stock: quantity });
+        this.products.set(productId, { ...product, stock: safeQuantity });
       }
       
       return newInventory;
