@@ -2,47 +2,47 @@ import { Link } from 'wouter';
 
 export default function Footer() {
   return (
-    <footer className="bg-[#232F3E] text-white py-12">
+    <footer className="bg-[#006600] text-white py-12">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <h3 className="text-xl font-bold mb-4">Borabyte</h3>
-            <p className="text-gray-300 mb-4">Your marketplace for new, refurbished, and used electronics at competitive prices.</p>
+            <p className="text-gray-100 mb-4">Your marketplace for new, refurbished, and used electronics at competitive prices.</p>
             <div className="flex space-x-4">
-              <Link href="#" className="text-gray-300 hover:text-[#FF9900]"><i className="fab fa-facebook-f"></i></Link>
-              <Link href="#" className="text-gray-300 hover:text-[#FF9900]"><i className="fab fa-twitter"></i></Link>
-              <Link href="#" className="text-gray-300 hover:text-[#FF9900]"><i className="fab fa-instagram"></i></Link>
-              <Link href="#" className="text-gray-300 hover:text-[#FF9900]"><i className="fab fa-linkedin-in"></i></Link>
+              <Link href="#" className="text-gray-100 hover:text-[#CC0000]"><i className="fab fa-facebook-f"></i></Link>
+              <Link href="#" className="text-gray-100 hover:text-[#CC0000]"><i className="fab fa-twitter"></i></Link>
+              <Link href="#" className="text-gray-100 hover:text-[#CC0000]"><i className="fab fa-instagram"></i></Link>
+              <Link href="#" className="text-gray-100 hover:text-[#CC0000]"><i className="fab fa-linkedin-in"></i></Link>
             </div>
           </div>
           <div>
             <h3 className="text-lg font-semibold mb-4">Shop</h3>
             <ul className="space-y-2">
-              <li><Link href="/category/all?condition=new" className="text-gray-300 hover:text-[#FF9900]">New Products</Link></li>
-              <li><Link href="/category/all?condition=refurbished" className="text-gray-300 hover:text-[#FF9900]">Refurbished Products</Link></li>
-              <li><Link href="/category/all?condition=used" className="text-gray-300 hover:text-[#FF9900]">Used Products</Link></li>
-              <li><Link href="#" className="text-gray-300 hover:text-[#FF9900]">Deals</Link></li>
-              <li><Link href="/category/laptops" className="text-gray-300 hover:text-[#FF9900]">Electronics</Link></li>
+              <li><Link href="/category/all?condition=new" className="text-gray-100 hover:text-[#CC0000]">New Products</Link></li>
+              <li><Link href="/category/all?condition=refurbished" className="text-gray-100 hover:text-[#CC0000]">Refurbished Products</Link></li>
+              <li><Link href="/category/all?condition=used" className="text-gray-100 hover:text-[#CC0000]">Used Products</Link></li>
+              <li><Link href="#" className="text-gray-100 hover:text-[#CC0000]">Deals</Link></li>
+              <li><Link href="/category/laptops" className="text-gray-100 hover:text-[#CC0000]">Electronics</Link></li>
             </ul>
           </div>
           <div>
             <h3 className="text-lg font-semibold mb-4">Customer Service</h3>
             <ul className="space-y-2">
-              <li><Link href="#" className="text-gray-300 hover:text-[#FF9900]">Contact Us</Link></li>
-              <li><Link href="#" className="text-gray-300 hover:text-[#FF9900]">FAQ</Link></li>
-              <li><Link href="#" className="text-gray-300 hover:text-[#FF9900]">Shipping Policy</Link></li>
-              <li><Link href="#" className="text-gray-300 hover:text-[#FF9900]">Returns & Refunds</Link></li>
-              <li><Link href="#" className="text-gray-300 hover:text-[#FF9900]">Warranty Information</Link></li>
+              <li><Link href="#" className="text-gray-100 hover:text-[#CC0000]">Contact Us</Link></li>
+              <li><Link href="#" className="text-gray-100 hover:text-[#CC0000]">FAQ</Link></li>
+              <li><Link href="#" className="text-gray-100 hover:text-[#CC0000]">Shipping Policy</Link></li>
+              <li><Link href="#" className="text-gray-100 hover:text-[#CC0000]">Returns & Refunds</Link></li>
+              <li><Link href="#" className="text-gray-100 hover:text-[#CC0000]">Warranty Information</Link></li>
             </ul>
           </div>
           <div>
             <h3 className="text-lg font-semibold mb-4">About</h3>
             <ul className="space-y-2">
-              <li><Link href="#" className="text-gray-300 hover:text-[#FF9900]">About Borabyte</Link></li>
-              <li><Link href="#" className="text-gray-300 hover:text-[#FF9900]">Careers</Link></li>
-              <li><Link href="#" className="text-gray-300 hover:text-[#FF9900]">Marketplace Partners</Link></li>
-              <li><Link href="#" className="text-gray-300 hover:text-[#FF9900]">Privacy Policy</Link></li>
-              <li><Link href="#" className="text-gray-300 hover:text-[#FF9900]">Terms of Service</Link></li>
+              <li><Link href="#" className="text-gray-100 hover:text-[#CC0000]">About Borabyte</Link></li>
+              <li><Link href="#" className="text-gray-100 hover:text-[#CC0000]">Careers</Link></li>
+              <li><Link href="#" className="text-gray-100 hover:text-[#CC0000]">Marketplace Partners</Link></li>
+              <li><Link href="#" className="text-gray-100 hover:text-[#CC0000]">Privacy Policy</Link></li>
+              <li><Link href="#" className="text-gray-100 hover:text-[#CC0000]">Terms of Service</Link></li>
             </ul>
           </div>
         </div>

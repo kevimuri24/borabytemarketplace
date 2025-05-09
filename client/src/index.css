@@ -13,15 +13,15 @@
   --card-foreground: 20 14.3% 4.1%;
   --border: 20 5.9% 90%;
   --input: 20 5.9% 90%;
-  --primary: 35 100% 50%; /* #FF9900 - warm orange */
-  --primary-foreground: 211 100% 99%;
-  --secondary: 215 45% 19%; /* #232F3E - deep navy */
-  --secondary-foreground: 0 0% 98%;
-  --accent: 214 28% 28%; /* #37475A - slate grey */
-  --accent-foreground: 0 0% 98%;
+  --primary: 0 100% 40%; /* #CC0000 - red */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 120 100% 25%; /* #006600 - green */
+  --secondary-foreground: 0 0% 100%;
+  --accent: 0 0% 100%; /* #FFFFFF - white */
+  --accent-foreground: 0 0% 0%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 60 9.1% 97.8%;
-  --ring: 35 100% 50%;
+  --ring: 0 100% 40%;
   --radius: 0.5rem;
   
   /* Custom colors for product conditions */
@@ -30,9 +30,9 @@
   --condition-used: 31 100% 39%; /* #C45500 */
   
   /* Chart colors */
-  --chart-1: 35 100% 50%;
-  --chart-2: 215 45% 19%;
-  --chart-3: 214 28% 28%;
+  --chart-1: 0 100% 40%;
+  --chart-2: 120 100% 25%;
+  --chart-3: 0 0% 100%;
   --chart-4: 142 100% 33%;
   --chart-5: 31 100% 39%;
 }
@@ -48,15 +48,15 @@
   --card-foreground: 0 0% 98%;
   --border: 240 3.7% 15.9%;
   --input: 240 3.7% 15.9%;
-  --primary: 35 100% 50%;
-  --primary-foreground: 211 100% 99%;
-  --secondary: 215 45% 19%;
-  --secondary-foreground: 0 0% 98%;
-  --accent: 214 28% 28%;
-  --accent-foreground: 0 0% 98%;
+  --primary: 0 100% 40%; /* #CC0000 - red */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 120 100% 25%; /* #006600 - green */
+  --secondary-foreground: 0 0% 100%;
+  --accent: 0 0% 100%; /* #FFFFFF - white */
+  --accent-foreground: 0 0% 0%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 0 0% 98%;
-  --ring: 35 100% 50%;
+  --ring: 0 100% 40%;
 }
 
 @layer base {
@@ -107,7 +107,7 @@
 }
 
 .marketplace-badge-direct {
-  @apply bg-[#FF9900] text-white;
+  @apply bg-[#CC0000] text-white;
 }
 
 .no-scrollbar::-webkit-scrollbar {
