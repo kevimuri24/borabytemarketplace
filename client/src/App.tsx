@@ -9,6 +9,9 @@ import ProductDetail from "@/pages/ProductDetail";
 import CategoryPage from "@/pages/CategoryPage";
 import Admin from "@/pages/Admin";
 import AuthPage from "@/pages/auth-page";
+import Cart from "@/pages/Cart";
+import Checkout from "@/pages/Checkout";
+import OrderConfirmation from "@/pages/OrderConfirmation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Chatbot from "@/components/Chatbot";
@@ -24,6 +27,9 @@ function Router() {
         <Route path="/product/:id" component={ProductDetail} />
         <Route path="/category/:slug" component={CategoryPage} />
         <ProtectedRoute path="/admin" component={Admin} />
+        <ProtectedRoute path="/cart" component={Cart} />
+        <ProtectedRoute path="/checkout" component={Checkout} />
+        <ProtectedRoute path="/order-confirmation" component={OrderConfirmation} />
         <Route path="/auth" component={AuthPage} />
         <Route component={NotFound} />
       </Switch>
