@@ -5,8 +5,15 @@ import { z } from "zod";
 import {
   insertProductSchema,
   insertCategorySchema,
+  insertCartItemSchema,
+  insertOrderSchema,
+  insertOrderItemSchema,
   productConditions,
   marketplaces,
+  paymentMethods,
+  deliveryMethods,
+  orderStatuses,
+  addressSchema,
 } from "@shared/schema";
 import { setupAuth } from "./auth";
 
@@ -325,6 +332,353 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Error processing chatbot message:", error);
       res.status(500).json({ message: "Failed to process your message" });
+    }
+  });
+
+  // === CART ROUTES ===
+  
+  // Get user's cart items
+  app.get("/api/cart", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to access your cart" });
+      }
+      
+      const userId = req.user.id;
+      const cartItems = await storage.getCartItems(userId);
+      
+      // Get detailed product information for each cart item
+      const cartWithDetails = await Promise.all(
+        cartItems.map(async (item) => {
+          const product = await storage.getProductById(item.productId);
+          return {
+            ...item,
+            product
+          };
+        })
+      );
+      
+      res.json(cartWithDetails);
+    } catch (error) {
+      console.error("Error fetching cart:", error);
+      res.status(500).json({ message: "Failed to fetch cart items" });
+    }
+  });
+
+  // Add item to cart
+  app.post("/api/cart", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to add items to your cart" });
+      }
+      
+      const cartItemSchema = z.object({
+        productId: z.number().int().positive(),
+        quantity: z.number().int().positive()
+      });
+      
+      const { productId, quantity } = cartItemSchema.parse(req.body);
+      const userId = req.user.id;
+      
+      // Check if product exists and has inventory
+      const product = await storage.getProductById(productId);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      
+      const inventory = await storage.getInventory(productId);
+      if (!inventory || inventory.quantity < quantity) {
+        return res.status(400).json({ message: "Not enough inventory available" });
+      }
+      
+      // Add to cart
+      const cartItem = await storage.addCartItem({
+        userId,
+        productId,
+        quantity
+      });
+      
+      res.status(201).json(cartItem);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: fromZodError(error).message 
+        });
+      }
+      console.error("Error adding to cart:", error);
+      res.status(500).json({ message: "Failed to add item to cart" });
+    }
+  });
+
+  // Update cart item quantity
+  app.patch("/api/cart/:productId", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to update your cart" });
+      }
+      
+      const productId = parseInt(req.params.productId, 10);
+      const userId = req.user.id;
+      
+      const quantitySchema = z.object({ quantity: z.number().int().min(1) });
+      const { quantity } = quantitySchema.parse(req.body);
+      
+      // Check inventory
+      const inventory = await storage.getInventory(productId);
+      if (!inventory || inventory.quantity < quantity) {
+        return res.status(400).json({ message: "Not enough inventory available" });
+      }
+      
+      // Check if item exists in cart
+      const existingItem = await storage.getCartItem(userId, productId);
+      if (!existingItem) {
+        return res.status(404).json({ message: "Item not found in cart" });
+      }
+      
+      // Update quantity
+      const updatedItem = await storage.updateCartItemQuantity(userId, productId, quantity);
+      res.json(updatedItem);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: fromZodError(error).message 
+        });
+      }
+      console.error("Error updating cart:", error);
+      res.status(500).json({ message: "Failed to update cart item" });
+    }
+  });
+
+  // Remove item from cart
+  app.delete("/api/cart/:productId", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to modify your cart" });
+      }
+      
+      const productId = parseInt(req.params.productId, 10);
+      const userId = req.user.id;
+      
+      const success = await storage.removeCartItem(userId, productId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Item not found in cart" });
+      }
+      
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error removing from cart:", error);
+      res.status(500).json({ message: "Failed to remove item from cart" });
+    }
+  });
+
+  // Clear cart
+  app.delete("/api/cart", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to clear your cart" });
+      }
+      
+      const userId = req.user.id;
+      await storage.clearCart(userId);
+      
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error clearing cart:", error);
+      res.status(500).json({ message: "Failed to clear cart" });
+    }
+  });
+
+  // === ORDER ROUTES ===
+  
+  // Get user's orders
+  app.get("/api/orders", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to access your orders" });
+      }
+      
+      const userId = req.user.id;
+      const orders = await storage.getOrdersByUser(userId);
+      
+      res.json(orders);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      res.status(500).json({ message: "Failed to fetch orders" });
+    }
+  });
+
+  // Get order details
+  app.get("/api/orders/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to access order details" });
+      }
+      
+      const orderId = parseInt(req.params.id, 10);
+      const userId = req.user.id;
+      
+      const order = await storage.getOrderById(orderId);
+      
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+      
+      // Check if the order belongs to the user
+      if (order.userId !== userId && !req.user.isAdmin) {
+        return res.status(403).json({ message: "You don't have permission to access this order" });
+      }
+      
+      // Get order items
+      const orderItems = await storage.getOrderItems(orderId);
+      
+      // Get product details for each order item
+      const itemsWithDetails = await Promise.all(
+        orderItems.map(async (item) => {
+          const product = await storage.getProductById(item.productId);
+          return {
+            ...item,
+            product
+          };
+        })
+      );
+      
+      res.json({
+        ...order,
+        items: itemsWithDetails
+      });
+    } catch (error) {
+      console.error("Error fetching order details:", error);
+      res.status(500).json({ message: "Failed to fetch order details" });
+    }
+  });
+
+  // Create new order from cart
+  app.post("/api/orders", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to place an order" });
+      }
+      
+      const userId = req.user.id;
+      
+      // Validate order data
+      const orderSchema = z.object({
+        paymentMethod: z.enum(paymentMethods),
+        paymentId: z.string().optional(),
+        deliveryMethod: z.enum(deliveryMethods),
+        deliveryFee: z.number().min(0),
+        shippingAddress: addressSchema,
+        billingAddress: addressSchema
+      });
+      
+      const orderData = orderSchema.parse(req.body);
+      
+      // Get cart items
+      const cartItems = await storage.getCartItems(userId);
+      
+      if (cartItems.length === 0) {
+        return res.status(400).json({ message: "Your cart is empty" });
+      }
+      
+      // Calculate total and prepare order items
+      let total = 0;
+      const orderItemsData = await Promise.all(
+        cartItems.map(async (item) => {
+          const product = await storage.getProductById(item.productId);
+          if (!product) {
+            throw new Error(`Product with ID ${item.productId} not found`);
+          }
+          
+          // Check inventory
+          const inventory = await storage.getInventory(item.productId);
+          if (!inventory || inventory.quantity < item.quantity) {
+            throw new Error(`Insufficient inventory for ${product.name}`);
+          }
+          
+          total += product.price * item.quantity;
+          
+          return {
+            productId: item.productId,
+            quantity: item.quantity,
+            price: product.price
+          };
+        })
+      );
+      
+      // Add delivery fee to total
+      total += orderData.deliveryFee;
+      
+      // Create order
+      const order = await storage.createOrder({
+        userId,
+        status: "pending",
+        total,
+        paymentMethod: orderData.paymentMethod,
+        paymentId: orderData.paymentId || null,
+        deliveryMethod: orderData.deliveryMethod,
+        deliveryFee: orderData.deliveryFee,
+        shippingAddress: orderData.shippingAddress,
+        billingAddress: orderData.billingAddress,
+        estimatedDeliveryDate: null,
+        trackingNumber: null
+      });
+      
+      // Create order items
+      const orderItems = await storage.createOrderItems(
+        orderItemsData.map(item => ({
+          orderId: order.id,
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.price
+        }))
+      );
+      
+      // Clear cart
+      await storage.clearCart(userId);
+      
+      res.status(201).json({
+        ...order,
+        items: orderItems
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: fromZodError(error).message 
+        });
+      }
+      console.error("Error creating order:", error);
+      res.status(500).json({ message: `Failed to create order: ${error.message}` });
+    }
+  });
+
+  // Payment intent creation for Stripe
+  app.post("/api/create-payment-intent", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to create a payment" });
+      }
+      
+      const amountSchema = z.object({ amount: z.number().positive() });
+      const { amount } = amountSchema.parse(req.body);
+      
+      // In a real implementation, this would call Stripe's API
+      // For now, we'll simulate the response
+      const clientSecret = `pi_${Date.now()}_secret_${Math.random().toString(36).substring(2, 10)}`;
+      
+      res.json({ clientSecret });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: fromZodError(error).message 
+        });
+      }
+      console.error("Error creating payment intent:", error);
+      res.status(500).json({ message: "Failed to create payment intent" });
     }
   });
 
