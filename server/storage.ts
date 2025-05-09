@@ -35,6 +35,23 @@ export interface IStorage {
   // Inventory operations
   getInventory(productId: number): Promise<Inventory | undefined>;
   updateInventory(productId: number, quantity: number | null): Promise<Inventory>;
+  
+  // Cart operations
+  getCartItems(userId: number): Promise<CartItem[]>;
+  getCartItem(userId: number, productId: number): Promise<CartItem | undefined>;
+  addCartItem(item: InsertCartItem): Promise<CartItem>;
+  updateCartItemQuantity(userId: number, productId: number, quantity: number): Promise<CartItem>;
+  removeCartItem(userId: number, productId: number): Promise<boolean>;
+  clearCart(userId: number): Promise<boolean>;
+  
+  // Order operations
+  createOrder(order: InsertOrder): Promise<Order>;
+  createOrderItems(items: InsertOrderItem[]): Promise<OrderItem[]>;
+  getOrdersByUser(userId: number): Promise<Order[]>;
+  getOrderById(id: number): Promise<Order | undefined>;
+  getOrderItems(orderId: number): Promise<OrderItem[]>;
+  updateOrderStatus(id: number, status: string): Promise<Order>;
+  updateOrderTracking(id: number, trackingNumber: string): Promise<Order>;
 }
 
 // In-memory implementation
