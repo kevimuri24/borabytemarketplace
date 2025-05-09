@@ -1,5 +1,5 @@
 import { 
-  users, type User, type InsertUser,
+  users, type User, type InsertUser, type InsertUserWithAdmin,
   categories, type Category, type InsertCategory,
   products, type Product, type InsertProduct,
   inventory, type Inventory, type InsertInventory
@@ -10,7 +10,7 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  createUser(user: InsertUserWithAdmin | (InsertUser & { isAdmin?: boolean })): Promise<User>;
   
   // Category operations
   getCategories(): Promise<Category[]>;
@@ -62,6 +62,19 @@ export class MemStorage implements IStorage {
     
     // Initialize with sample categories
     this.initializeCategories();
+    
+    // Initialize with admin user
+    this.initializeAdminUser();
+  }
+  
+  private initializeAdminUser() {
+    // Add a default admin user
+    // Password is 'admin123' (will be hashed properly in auth.ts on first login)
+    const adminUser: InsertUser = {
+      username: "admin",
+      password: "admin123"
+    };
+    this.createUser({...adminUser, isAdmin: true});
   }
 
   private initializeCategories() {
@@ -90,9 +103,13 @@ export class MemStorage implements IStorage {
     );
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
+  async createUser(insertUser: InsertUser & { isAdmin?: boolean }): Promise<User> {
     const id = this.currentUserId++;
-    const user: User = { ...insertUser, id, isAdmin: false };
+    const user: User = { 
+      ...insertUser, 
+      id, 
+      isAdmin: insertUser.isAdmin ?? false 
+    };
     this.users.set(id, user);
     return user;
   }

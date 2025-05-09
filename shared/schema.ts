@@ -62,6 +62,11 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
 });
 
+// Extended user schema that includes isAdmin for internal use
+export const insertUserWithAdminSchema = insertUserSchema.extend({
+  isAdmin: z.boolean().default(false),
+});
+
 // Types
 export type Category = typeof categories.$inferSelect;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
@@ -74,6 +79,7 @@ export type InsertInventory = z.infer<typeof insertInventorySchema>;
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertUserWithAdmin = z.infer<typeof insertUserWithAdminSchema>;
 
 // Custom validation schemas for frontend
 export const productConditions = ["new", "refurbished", "used"] as const;
