@@ -9,6 +9,7 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [, navigate] = useLocation();
+  const { user, logoutMutation } = useAuth();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,10 +57,34 @@ export default function Header() {
           
           {/* User actions */}
           <div className="flex items-center">
-            <Link href="#" className="hidden md:block px-3 py-2 hover:text-[#CC0000]">
-              <div className="text-xs">Hello, Sign in</div>
-              <div className="font-bold">Account & Lists</div>
-            </Link>
+            {user ? (
+              <>
+                <div className="hidden md:block px-3 py-2">
+                  <div className="text-xs">Hello,</div>
+                  <div className="font-bold">{user.username}</div>
+                </div>
+                {user.isAdmin && (
+                  <Link href="/admin" className="hidden md:block px-3 py-2 hover:text-[#CC0000]">
+                    <div className="text-xs">Manage</div>
+                    <div className="font-bold">Admin Panel</div>
+                  </Link>
+                )}
+                <Button 
+                  variant="ghost" 
+                  className="hidden md:block px-3 py-2 hover:text-[#CC0000]"
+                  onClick={() => logoutMutation.mutate()}
+                  disabled={logoutMutation.isPending}
+                >
+                  <div className="text-xs">{logoutMutation.isPending ? "Logging out..." : "Click to"}</div>
+                  <div className="font-bold">Sign Out</div>
+                </Button>
+              </>
+            ) : (
+              <Link href="/auth" className="hidden md:block px-3 py-2 hover:text-[#CC0000]">
+                <div className="text-xs">Hello, Sign in</div>
+                <div className="font-bold">Account & Lists</div>
+              </Link>
+            )}
             <Link href="#" className="hidden md:block px-3 py-2 hover:text-[#CC0000]">
               <div className="text-xs">Returns</div>
               <div className="font-bold">& Orders</div>
@@ -110,6 +135,14 @@ export default function Header() {
             <li className="mr-6 py-1 hidden md:block">
               <Link href="/category/wearables" className="hover:text-[#CC0000]">Wearables</Link>
             </li>
+            {user?.isAdmin && (
+              <li className="mr-6 py-1">
+                <Link href="/admin" className="hover:text-[#CC0000] flex items-center">
+                  <i className="fas fa-cog mr-2"></i>
+                  Admin
+                </Link>
+              </li>
+            )}
             <li className="py-1 md:hidden">
               <Button variant="ghost" className="text-white hover:text-[#CC0000] p-0">
                 More <i className="fas fa-chevron-down ml-1"></i>
