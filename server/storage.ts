@@ -2,7 +2,10 @@ import {
   users, type User, type InsertUser, type InsertUserWithAdmin,
   categories, type Category, type InsertCategory,
   products, type Product, type InsertProduct,
-  inventory, type Inventory, type InsertInventory
+  inventory, type Inventory, type InsertInventory,
+  cartItems, type CartItem, type InsertCartItem,
+  orders, type Order, type InsertOrder,
+  orderItems, type OrderItem, type InsertOrderItem
 } from "@shared/schema";
 
 // Storage interface for all entities
@@ -60,22 +63,34 @@ export class MemStorage implements IStorage {
   private categories: Map<number, Category>;
   private products: Map<number, Product>;
   private inventories: Map<number, Inventory>;
+  private cartItems: Map<number, CartItem>;
+  private orders: Map<number, Order>;
+  private orderItems: Map<number, OrderItem>;
   
   private currentUserId: number;
   private currentCategoryId: number;
   private currentProductId: number;
   private currentInventoryId: number;
+  private currentCartItemId: number;
+  private currentOrderId: number;
+  private currentOrderItemId: number;
 
   constructor() {
     this.users = new Map();
     this.categories = new Map();
     this.products = new Map();
     this.inventories = new Map();
+    this.cartItems = new Map();
+    this.orders = new Map();
+    this.orderItems = new Map();
     
     this.currentUserId = 1;
     this.currentCategoryId = 1;
     this.currentProductId = 1;
     this.currentInventoryId = 1;
+    this.currentCartItemId = 1;
+    this.currentOrderId = 1;
+    this.currentOrderItemId = 1;
     
     // Initialize with sample categories
     this.initializeCategories();
@@ -575,6 +590,163 @@ export class MemStorage implements IStorage {
       
       return newInventory;
     }
+  }
+  
+  // Cart operations
+  async getCartItems(userId: number): Promise<CartItem[]> {
+    return Array.from(this.cartItems.values()).filter(
+      (item) => item.userId === userId
+    );
+  }
+  
+  async getCartItem(userId: number, productId: number): Promise<CartItem | undefined> {
+    return Array.from(this.cartItems.values()).find(
+      (item) => item.userId === userId && item.productId === productId
+    );
+  }
+  
+  async addCartItem(item: InsertCartItem): Promise<CartItem> {
+    // Check if item already exists for this user and product
+    const existingItem = await this.getCartItem(item.userId, item.productId);
+    
+    if (existingItem) {
+      // Update quantity if item already exists
+      return this.updateCartItemQuantity(
+        item.userId,
+        item.productId,
+        existingItem.quantity + item.quantity
+      );
+    }
+    
+    // Create new cart item
+    const id = this.currentCartItemId++;
+    const cartItem: CartItem = {
+      id,
+      ...item,
+      addedAt: new Date()
+    };
+    
+    this.cartItems.set(id, cartItem);
+    return cartItem;
+  }
+  
+  async updateCartItemQuantity(userId: number, productId: number, quantity: number): Promise<CartItem> {
+    const existingItem = await this.getCartItem(userId, productId);
+    
+    if (!existingItem) {
+      throw new Error(`Cart item not found for user ${userId} and product ${productId}`);
+    }
+    
+    const updatedItem: CartItem = {
+      ...existingItem,
+      quantity
+    };
+    
+    this.cartItems.set(existingItem.id, updatedItem);
+    return updatedItem;
+  }
+  
+  async removeCartItem(userId: number, productId: number): Promise<boolean> {
+    const existingItem = await this.getCartItem(userId, productId);
+    
+    if (!existingItem) {
+      return false;
+    }
+    
+    return this.cartItems.delete(existingItem.id);
+  }
+  
+  async clearCart(userId: number): Promise<boolean> {
+    const cartItems = await this.getCartItems(userId);
+    
+    for (const item of cartItems) {
+      this.cartItems.delete(item.id);
+    }
+    
+    return true;
+  }
+  
+  // Order operations
+  async createOrder(orderData: InsertOrder): Promise<Order> {
+    const id = this.currentOrderId++;
+    const order: Order = {
+      id,
+      ...orderData,
+      orderDate: new Date()
+    };
+    
+    this.orders.set(id, order);
+    return order;
+  }
+  
+  async createOrderItems(items: InsertOrderItem[]): Promise<OrderItem[]> {
+    const createdItems: OrderItem[] = [];
+    
+    for (const item of items) {
+      const id = this.currentOrderItemId++;
+      const orderItem: OrderItem = {
+        id,
+        ...item
+      };
+      
+      this.orderItems.set(id, orderItem);
+      createdItems.push(orderItem);
+      
+      // Update inventory
+      const product = await this.getProductById(item.productId);
+      if (product && product.stock) {
+        await this.updateInventory(item.productId, Math.max(0, product.stock - item.quantity));
+      }
+    }
+    
+    return createdItems;
+  }
+  
+  async getOrdersByUser(userId: number): Promise<Order[]> {
+    return Array.from(this.orders.values())
+      .filter(order => order.userId === userId)
+      .sort((a, b) => b.orderDate.getTime() - a.orderDate.getTime()); // Sort by date descending
+  }
+  
+  async getOrderById(id: number): Promise<Order | undefined> {
+    return this.orders.get(id);
+  }
+  
+  async getOrderItems(orderId: number): Promise<OrderItem[]> {
+    return Array.from(this.orderItems.values())
+      .filter(item => item.orderId === orderId);
+  }
+  
+  async updateOrderStatus(id: number, status: string): Promise<Order> {
+    const order = await this.getOrderById(id);
+    
+    if (!order) {
+      throw new Error(`Order with ID ${id} not found`);
+    }
+    
+    const updatedOrder: Order = {
+      ...order,
+      status
+    };
+    
+    this.orders.set(id, updatedOrder);
+    return updatedOrder;
+  }
+  
+  async updateOrderTracking(id: number, trackingNumber: string): Promise<Order> {
+    const order = await this.getOrderById(id);
+    
+    if (!order) {
+      throw new Error(`Order with ID ${id} not found`);
+    }
+    
+    const updatedOrder: Order = {
+      ...order,
+      trackingNumber
+    };
+    
+    this.orders.set(id, updatedOrder);
+    return updatedOrder;
   }
 }
 
